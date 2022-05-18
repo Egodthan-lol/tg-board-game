@@ -1,6 +1,6 @@
 // Set the `DB_REMEMBER_REDIS` environmental variable if you want to use Redis.
 // Otherwise, the default is Sqlite.
-
+use dotenv::dotenv;
 use teloxide::{
     dispatching2::dialogue::{
         serializer::{Bincode, Json},
@@ -43,6 +43,7 @@ pub enum Command {
 
 #[tokio::main]
 async fn main() {
+    dotenv().ok();
     pretty_env_logger::init();
     log::info!("Starting db_remember_bot...");
 
