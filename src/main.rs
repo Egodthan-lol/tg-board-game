@@ -24,6 +24,12 @@ pub enum State {
 
     #[handler(handle_got_number)]
     GotNumber(i32),
+
+    #[handler(handle_got_number)]
+    AddNumber(i32),
+
+    #[handler(handle_got_number)]
+    SubNumber(i32),
 }
 
 impl Default for State {
@@ -39,6 +45,10 @@ pub enum Command {
     Get,
     #[command(description = "reset your number.")]
     Reset,
+    #[command(description = "add your number.")]
+    Add(String),
+    #[command(description = "sub your number.")]
+    Sub(String),
 }
 
 #[tokio::main]
@@ -103,6 +113,16 @@ async fn handle_got_number(
             Command::Reset => {
                 dialogue.reset().await?;
                 bot.send_message(msg.chat.id, "Number resetted").await?;
+            }
+            Command::Add(number_str) => {
+                let number: i32 = number_str.parse()?;
+                dialogue.update(State::AddNumber(num+number)).await?;
+                bot.send_message(msg.chat.id, format!("Number added, now {}", num+number)).await?;
+            }
+            Command::Sub(number_str) => {
+                let number: i32 = number_str.parse()?;
+                dialogue.update(State::SubNumber(num-number)).await?;
+                bot.send_message(msg.chat.id, format!("Number subed, now {}", num-number)).await?;
             }
         },
         Err(_) => {
