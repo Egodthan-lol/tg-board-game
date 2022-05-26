@@ -10,6 +10,10 @@ use teloxide::{
     prelude2::*,
     types::Me,
     utils::command::BotCommand,
+    types::{
+        InlineKeyboardButton,
+        InlineKeyboardMarkup,
+    }
 };
 
 type MyDialogue = Dialogue<State, ErasedStorage<State>>;
@@ -30,6 +34,9 @@ pub enum State {
 
     #[handler(handle_got_number)]
     SubNumber(i32),
+
+    #[handler(handle_got_number)]
+    BattlePlayer,
 }
 
 impl Default for State {
@@ -49,6 +56,8 @@ pub enum Command {
     Add(String),
     #[command(description = "sub your number.")]
     Sub(String),
+    #[command(description = "sub your number.")]
+    Battle,
 }
 
 #[tokio::main]
@@ -123,6 +132,23 @@ async fn handle_got_number(
                 let number: i32 = number_str.parse()?;
                 dialogue.update(State::SubNumber(num-number)).await?;
                 bot.send_message(msg.chat.id, format!("Number subed, now {}", num-number)).await?;
+            }
+            Command::Battle => {
+                let keyboard: Vec<Vec<InlineKeyboardButton>> = vec![vec![
+                InlineKeyboardButton::callback(".".to_owned(), "0".to_owned()),
+                InlineKeyboardButton::callback(".".to_owned(), "1".to_owned()),
+                InlineKeyboardButton::callback(".".to_owned(), "2".to_owned())],
+                vec![
+                InlineKeyboardButton::callback(".".to_owned(), "3".to_owned()),
+                InlineKeyboardButton::callback(".".to_owned(), "4".to_owned()),
+                InlineKeyboardButton::callback(".".to_owned(), "5".to_owned())],
+                vec![
+                InlineKeyboardButton::callback(".".to_owned(), "6".to_owned()),
+                InlineKeyboardButton::callback(".".to_owned(), "7".to_owned()),
+                InlineKeyboardButton::callback(".".to_owned(), "8".to_owned())]];
+                bot.send_message(msg.chat.id, "Please, send /get or /reset")
+                .reply_markup(InlineKeyboardMarkup::new(keyboard))
+                .await?;
             }
         },
         Err(_) => {
