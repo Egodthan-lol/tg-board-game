@@ -134,18 +134,17 @@ async fn handle_got_number(
                 bot.send_message(msg.chat.id, format!("Number subed, now {}", num-number)).await?;
             }
             Command::Battle => {
-                let keyboard: Vec<Vec<InlineKeyboardButton>> = vec![vec![
-                InlineKeyboardButton::callback(".".to_owned(), "0".to_owned()),
-                InlineKeyboardButton::callback(".".to_owned(), "1".to_owned()),
-                InlineKeyboardButton::callback(".".to_owned(), "2".to_owned())],
-                vec![
-                InlineKeyboardButton::callback(".".to_owned(), "3".to_owned()),
-                InlineKeyboardButton::callback(".".to_owned(), "4".to_owned()),
-                InlineKeyboardButton::callback(".".to_owned(), "5".to_owned())],
-                vec![
-                InlineKeyboardButton::callback(".".to_owned(), "6".to_owned()),
-                InlineKeyboardButton::callback(".".to_owned(), "7".to_owned()),
-                InlineKeyboardButton::callback(".".to_owned(), "8".to_owned())]];
+                let mut keyboard: Vec<Vec<InlineKeyboardButton>> = vec![];
+
+                let button_name = ["0", "1", "2", "3", "4", "5", "6", "7", "8"]; 
+
+                for name in button_name.chunks(3) {
+                    let row = name
+                        .iter()
+                        .map(|&name| InlineKeyboardButton::callback(name.to_owned(), name.to_owned()))
+                        .collect();
+                    keyboard.push(row);
+                }                
                 bot.send_message(msg.chat.id, "Please, send /get or /reset")
                 .reply_markup(InlineKeyboardMarkup::new(keyboard))
                 .await?;
