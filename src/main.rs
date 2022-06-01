@@ -4,11 +4,11 @@ use dotenv::dotenv;
 use teloxide::{
     dispatching2::dialogue::{
         serializer::{Bincode, Json},
-        ErasedStorage, RedisStorage, SqliteStorage, Storage,
+        ErasedStorage, RedisStorage, SqliteStorage, Storage, GetChatId,
     },
     macros::DialogueState,
     prelude2::*,
-    types::Me,
+    types::{Me, MessageLeftChatMember},
     utils::command::BotCommand,
     types::{
         InlineKeyboardButton,
@@ -74,9 +74,11 @@ async fn main() {
         SqliteStorage::open("db.sqlite", Json).await.unwrap().erase()
     };
 
-    let handler = Update::filter_message()
-        .enter_dialogue::<Message, ErasedStorage<State>, State>()
-        .dispatch_by::<State>();
+    let handler = dptree::entry()
+        .branch(Update::filter_message()
+                .enter_dialogue::<Message, ErasedStorage<State>, State>()
+                .dispatch_by::<State>())
+        .branch(Update::filter_callback_query().endpoint(handle_callback));
 
     Dispatcher::builder(bot, handler)
         .dependencies(dptree::deps![storage])
@@ -145,7 +147,7 @@ async fn handle_got_number(
                         .collect();
                     keyboard.push(row);
                 }                
-                bot.send_message(msg.chat.id, "Please, send /get or /reset")
+                bot.send_message(msg.chat.id, "Let's battle!")
                 .reply_markup(InlineKeyboardMarkup::new(keyboard))
                 .await?;
             }
@@ -158,3 +160,21 @@ async fn handle_got_number(
     Ok(())
 }
 
+async fn handle_callback(
+    q: CallbackQuery,
+    bot: AutoSend<Bot>,
+) -> HandlerResult {
+    bot.answer_callback_query(q.id).await?;
+    if let Some(q_data) = q.data {
+        let from = q.from;
+        match q.message {
+            Some(Message { id, chat, .. }) => {
+                bot.edit_message_text(chat.id, id, format!("{} click {}", from.full_name(), q_data)).await?;
+            }
+            None => {
+                log::info!("{}", q_data);
+            }
+        }
+    }
+    Ok(())
+}
